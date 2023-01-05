@@ -15,7 +15,7 @@ def preprocessing(data):
     value_like_cols = [16,17,18]
 
     data_new = data[:,value_data_cols].astype(np.float64)
-    print(data_new)
+    #print(data_new)
 
     for col in value_like_cols:
         for row in range(data.shape[0]):
@@ -23,7 +23,7 @@ def preprocessing(data):
             if not tmp.isalpha() and not tmp.isdigit():
                 data[row, col] = tmp.strip('>').strip('V').strip('E')
         
-        print(col, data[:, col])
+        #print(col, data[:, col])
         v = data[:,col]
         NA_index = np.where(v == '?')
         complete_index = np.where(v != '?')
@@ -33,18 +33,26 @@ def preprocessing(data):
         data[:, col] = v 
         data_new = np.insert(data_new, -1, data[:,col], axis=1)
     data_new = MinMaxScaler().fit_transform(data_new)
-    print(data_new)
+    #print(data_new)
 
     cat_data = []
+    flags = []
     for col in categories_data_cols:
         onehot_code = pd.get_dummies(data[:,col]).values
-        print(np.argmax(onehot_code, axis=1))
+        keys = pd.get_dummies(data[:,col]).columns.tolist()
+        #print(keys)
+        flag = -1
+        for i, k in enumerate(keys):
+            if k == '?' or k == 'None':
+                flag = i
+        flags.append(flag)
+        #print(np.argmax(onehot_code, axis=1))
         cat_data.append(np.argmax(onehot_code, axis=1))
 
-    return data_new, np.transpose(np.array(cat_data))
+    return data_new, np.transpose(np.array(cat_data)), flags
 
 if __name__ == "__main__":
     data = load_data('./diabetic_data.csv')
     print(data.shape)
-    data1, data2 = preprocessing(data)
+    data1, data2, NAcols = preprocessing(data)
     print(data1.shape, data2.shape)
